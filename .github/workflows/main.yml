@@ -1,33 +1,35 @@
-name: Deploy EC2 with Terraform
+name: Create EC2 Instance
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Vault CLI
-        uses: hashicorp/setup-vault@v3
-
-      - name: Authenticate to Vault
-        id: vault-login
+      - name: Login to Vault
         run: |
-          VAULT_TOKEN=$(vault write -field=token auth/approle/login \
+          TOKEN=$(vault write -field=token auth/approle/login \
             role_id="${{ secrets.VAULT_ROLE_ID }}" \
             secret_id="${{ secrets.VAULT_SECRET_ID }}")
 
-          echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
-        env:
-          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          echo "VAULT_TOKEN=$TOKEN" >> $GITHUB_ENV
 
-      - name: Read AWS Credentials
+      - name: Read AWS credentials
         run: |
-          export VAULT_ADDR=${{ secrets.VAULT_ADDR }}
           export VAULT_TOKEN=${{ env.VAULT_TOKEN }}
 
           echo "AWS_ACCESS_KEY_ID=$(vault kv get -field=AWS_ACCESS_KEY_ID secret/aws)" >> $GITHUB_ENV
@@ -37,13 +39,13 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        working-directory: terraform
         run: terraform init
 
+      - name: Terraform Validate
+        run: terraform validate
+
       - name: Terraform Plan
-        working-directory: terraform
         run: terraform plan
 
       - name: Terraform Apply
-        working-directory: terraform
         run: terraform apply -auto-approve
