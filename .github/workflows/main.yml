@@ -1,4 +1,4 @@
-name: Deploy EC2
+name: Create EC2 Instance
 
 on:
   push:
@@ -15,6 +15,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Vault CLI
+        run: |
+          wget -q https://releases.hashicorp.com/vault/1.20.3/vault_1.20.3_linux_amd64.zip
+          unzip -o vault_1.20.3_linux_amd64.zip
+          sudo mv vault /usr/local/bin/
+          vault version
 
       - name: Login to Vault
         run: |
