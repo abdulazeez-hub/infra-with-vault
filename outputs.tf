@@ -1,5 +1,5 @@
-output "ec2_name" {
-  value = aws_instance.web.tags["Name"]
+output "ec2_ip" {
+  value = aws_instance.web.ip
 }
 
 output "ec2_id" {
