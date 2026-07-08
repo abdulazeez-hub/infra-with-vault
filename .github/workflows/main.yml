@@ -30,22 +30,13 @@ jobs:
             secret_id="${{ secrets.VAULT_SECRET_ID }}")
 
           echo "VAULT_TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "Successfully logged into Vault"
 
       - name: Read AWS credentials
         run: |
           export VAULT_TOKEN="${{ env.VAULT_TOKEN }}"
 
-          vault kv get secret/aws
-
-          AWS_KEY=$(vault kv get -field=AWS_ACCESS_KEY_ID secret/aws)
-          AWS_SECRET=$(vault kv get -field=AWS_SECRET_ACCESS_KEY secret/aws)
-
-          echo "::add-mask::$AWS_KEY"
-          echo "::add-mask::$AWS_SECRET"
-
-          echo "AWS_ACCESS_KEY_ID=$AWS_KEY" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=$(vault kv get -field=AWS_ACCESS_KEY_ID secret/aws)" >> "$GITHUB_ENV"
+          echo "AWS_SECRET_ACCESS_KEY=$(vault kv get -field=AWS_SECRET_ACCESS_KEY secret/aws)" >> "$GITHUB_ENV"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
